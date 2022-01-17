@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 class Water:
-    def __init__(self):
+    def __init__(self, current_model=None):
         self.X_u = -4.03
         self.Y_v = -6.22
         self.Z_w = -5.18
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     env = Water()
     thrust_force = np.zeros(4)
     env.reset_robot()
-    for _ in range(30):
+    for _ in range(300):
         env.update(thrust_force)
         print(env.eta_dot, env.eta_dotdot)
     traject = np.asarray(env.traject)
