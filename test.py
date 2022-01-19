@@ -4,7 +4,6 @@ import numpy as np
 import os
 import pprint
 import tempfile
-
 # connect to the AirSim simulator
 client = airsim.MultirotorClient()
 client.confirmConnection()
@@ -22,9 +21,16 @@ f2.join()
 state1 = client.simGetVehiclePose(vehicle_name="Drone1").position
 s = pprint.pformat(state1)
 print("state: %s" % s)
-state2 = client.simGetVehiclePose(vehicle_name="Drone2").position
-s = pprint.pformat(state2)
+# state2 = client.simGetVehiclePose(vehicle_name="Drone2").position
+# s = pprint.pformat(state2)
+# print("state: %s" % s)
+
+state1 = client.simGetVehiclePose(vehicle_name="Drone1").orientation
+s = pprint.pformat(state1)
 print("state: %s" % s)
+# state2 = client.simGetVehiclePose(vehicle_name="Drone2").orientation
+# s = pprint.pformat(state2)
+# print("state: %s" % s)
 
 airsim.wait_key('Press any key to move vehicles')
 f1 = client.moveToPositionAsync(-5, 5, -10, 5, vehicle_name="Drone1")
@@ -36,9 +42,16 @@ f2.join()
 state1 = client.simGetVehiclePose(vehicle_name="Drone1").position
 s = pprint.pformat(state1)
 print("state: %s" % s)
-state2 = client.simGetVehiclePose(vehicle_name="Drone2").position
-s = pprint.pformat(state2)
+# state2 = client.simGetVehiclePose(vehicle_name="Drone2").position
+# s = pprint.pformat(state2)
+# print("state: %s" % s)
+
+state1 = client.simGetVehiclePose(vehicle_name="Drone1").orientation
+s = pprint.pformat(state1)
 print("state: %s" % s)
+# state2 = client.simGetVehiclePose(vehicle_name="Drone2").orientation
+# s = pprint.pformat(state2)
+# print("state: %s" % s)
 
 # airsim.wait_key('Press any key to take images')
 # # get camera images from the car

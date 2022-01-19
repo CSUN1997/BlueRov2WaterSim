@@ -124,6 +124,9 @@ class Water:
         D = -np.diag([self.X_u + self.X_uu * np.abs(u), self.Y_v + self.Y_vv * np.abs(v),
                       self.Z_w + self.Z_ww * np.abs(w), self.K_p + self.K_pp * np.abs(p),
                       self.M_q + self.M_qq * np.abs(q), self.N_r + self.N_rr * np.abs(r)])
+        # D = -np.diag([self.X_u, self.Y_v,
+        #               self.Z_w, self.K_p,
+        #               self.M_q, self.N_r])
         return D
 
     def get_g(self):
@@ -133,6 +136,51 @@ class Water:
                         -(self.W - self.B) * c(theta) * c(phi), self.r_g[2] * self.W * c(theta) * s(phi),
                         self.r_g[2] * self.W * s(theta), 0]).T
         return g
+
+    # def get_acceleration(self, thrust_force):
+    #     # velocity should be the relative velocity
+    #     u, v, w, p, q, r = self.eta_dot
+    #     m = self.m
+    #     C_RB = np.array([[0, 0, 0, 0, m * w, 0],
+    #                      [0, 0, 0, -m * w, 0, 0],
+    #                      [0, 0, 0, m * v, -m * u, 0],
+    #                      [0, m * w, -m * v, 0, self.I_z * r, -self.I_y * q],
+    #                      [-m * w, 0, -m * u, -self.I_z * r, 0, self.I_x * p],
+    #                      [m * v, -m * u, 0, self.I_y * q, -self.I_x * p, 0]])
+    #     M_A = -np.diag([self.X_u_dot, self.Y_v_dot, self.Z_w_dot, self.K_p_dot, self.M_q_dot, self.N_r_dot])
+    #     v_c = self.get_current_vel()
+    #     v_w = self.eta_dot - v_c
+    #     v_w_dot = (v_w - self.v_w[-1]) / self.delta_t
+    #     # print(v_w, self.v_w[-1])
+    #     v_dot = self.eta_dotdot
+    #     C_A = self.get_C_A(v_w)
+    #     D = self.get_D(v_w)
+    #     g = self.get_g()
+    #     # part1 = self.M_RB @ v_dot.T
+    #     # part2 = C_RB @ self.eta_dot.T
+    #     # part3 = M_A @ v_w_dot.T
+    #     # part4 = C_A @ v_w.T
+    #     # part5 = D @ v_w.T
+    #     # J = self.get_Jacobian()
+    #     v_c_dot = (v_c - self.v_c[-1]) / self.delta_t
+    #     part1 = self.M_RB @ v_c_dot
+    #     part2 = -M_A @ v_w_dot
+    #     part3 = C_RB @ v_c
+    #     part4 = C_RB @ v_w
+    #     part5 = -C_A @ v_w
+    #     part6 = -D @ v_w
+    #
+    #     tau = part1 + part2 + part3 + part4 + part5 + part6
+    #     # print(1, part1)
+    #     # print(2, part2)
+    #     # print(3, part3)
+    #     # print(4, part4)
+    #     # print(5, part5)
+    #     # print(6, g)
+    #     # print(tau)
+    #     self.eta_dotdot = (tau + thrust_force) / self.m
+    #     self.v_w.append(v_w)
+    #     self.v_c.append(v_c)
 
     def get_acceleration(self, thrust_force):
         # velocity should be the relative velocity
@@ -145,6 +193,7 @@ class Water:
                          [-m * w, 0, -m * u, -self.I_z * r, 0, self.I_x * p],
                          [m * v, -m * u, 0, self.I_y * q, -self.I_x * p, 0]])
         M_A = -np.diag([self.X_u_dot, self.Y_v_dot, self.Z_w_dot, self.K_p_dot, self.M_q_dot, self.N_r_dot])
+        M = self.M_RB + M_A
         v_c = self.get_current_vel()
         v_w = self.eta_dot - v_c
         v_w_dot = (v_w - self.v_w[-1]) / self.delta_t
@@ -175,16 +224,18 @@ class Water:
         # print(5, part5)
         # print(6, g)
         # print(tau)
-        self.eta_dotdot = tau / self.m
+        # self.eta_dotdot = (tau + thrust_force) / self.m
+        self.eta_dotdot = np.linalg.inv(M) @ (tau + thrust_force)
         self.v_w.append(v_w)
         self.v_c.append(v_c)
 
 
 if __name__ == '__main__':
     env = Water()
-    thrust_force = np.zeros(4)
+    thrust_force = np.zeros(6)
+    thrust_force[1] = 0.1
     env.reset_robot()
-    for _ in range(300):
+    for _ in range(80):
         env.update(thrust_force)
         print(env.eta_dot, env.eta_dotdot)
     traject = np.asarray(env.traject)
