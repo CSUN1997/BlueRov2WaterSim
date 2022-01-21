@@ -201,14 +201,16 @@ class Water:
         D = self.get_D(v_w)
         g = self.get_g()
         v_c_dot = (v_c - self.v_c[-1]) / self.delta_t
-        part1 = self.M_RB @ v_c_dot
-        part2 = -M_A @ v_w_dot
-        part3 = C_RB @ v_c
-        part4 = C_RB @ v_w
-        part5 = -C_A @ v_w
-        part6 = -D @ v_w
+        # part1 = self.M_RB @ v_c_dot
+        # part2 = -M_A @ v_w_dot
+        # part3 = C_RB @ v_c
+        # part4 = C_RB @ v_w
+        # part5 = -C_A @ v_w
+        # part6 = -D @ v_w
+        part1 = -(C_A + C_RB) @ v_w
+        part2 = -D @ v_w
 
-        tau = part1 + part2 + part3 + part4 + part5 + part6
+        tau = part1 + part2
 
         # print(1, part1)
         # print(2, part2)
