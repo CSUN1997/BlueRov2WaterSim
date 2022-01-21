@@ -1,3 +1,8 @@
+'''
+Reference 1: DISTURBANCE OBSERVER BASED MODEL PREDICTIVE CONTROL FOR ROV TRAJECTORY-TRACKING
+Reference 2: 6-DoF Modelling and Control of a Remotely Operated Vehicle
+Reference 3: Model Predictive Control for the BlueROV2 Theory and Implementation
+'''
 import numpy as np
 import copy
 from numpy import sin as s
@@ -70,7 +75,7 @@ class Water:
                       [np.zeros([3, 3]), T]])
         return J
 
-    def reset_robot(self, x=0.2, y=-0.5, theta=np.pi / 18):
+    def reset_robot(self):
         self.t = 0
         self.V_c = (self.V_max + self.V_min) / 2
         self.eta = np.zeros(6)
@@ -97,14 +102,7 @@ class Water:
         return vec
 
     def get_current_vel(self):
-        # if self.V_max >= self.V_c >= self.V_min:
-        #     V_c_dot = np.random.normal(0, 0.01)
-        # else:
-        #     V_c_dot = -np.random.normal(0, 0.01)
-        # self.V_c += V_c_dot
-        # self.V_c = np.clip(self.V_c, self.V_min, self.V_max)
-        # v_hc = np.asarray([self.V_c * np.cos(-psi), self.V_c * np.sin(-psi), 0]).T
-        # return v_hc
+        # Change to the desired current velocity
         v = np.zeros(6)
         v[0] = 1
         return v
@@ -153,12 +151,6 @@ class Water:
         C_A = self.get_C_A(v_w)
         D = self.get_D(v_w)
         g = self.get_g()
-        # part1 = self.M_RB @ v_dot.T
-        # part2 = C_RB @ self.eta_dot.T
-        # part3 = M_A @ v_w_dot.T
-        # part4 = C_A @ v_w.T
-        # part5 = D @ v_w.T
-        # J = self.get_Jacobian()
         v_c_dot = (v_c - self.v_c[-1]) / self.delta_t
         part1 = self.M_RB @ v_c_dot
         part2 = -M_A @ v_w_dot
@@ -168,21 +160,15 @@ class Water:
         part6 = -D @ v_w
 
         tau = part1 + part2 + part3 + part4 + part5 + part6
-        # print(1, part1)
-        # print(2, part2)
-        # print(3, part3)
-        # print(4, part4)
-        # print(5, part5)
-        # print(6, g)
-        # print(tau)
-        self.eta_dotdot = tau / self.m
+        self.eta_dotdot = (tau + thrust_force) / self.m
         self.v_w.append(v_w)
         self.v_c.append(v_c)
 
 
 if __name__ == '__main__':
     env = Water()
-    thrust_force = np.zeros(4)
+    thrust_force = np.zeros(6)
+    thrust_force[1] = 0.5
     env.reset_robot()
     for _ in range(30):
         env.update(thrust_force)
