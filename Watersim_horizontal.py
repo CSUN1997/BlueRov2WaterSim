@@ -3,7 +3,7 @@ import random
 import matplotlib.pyplot as plt
 
 
-class Current(object):
+class GaussianCurrent(object):
     def __init__(self, delta_t):
         self.delta_t = delta_t
         self.integral = 0.1
@@ -26,6 +26,20 @@ class Current(object):
     def get_current_vector(self, beta, psi):
         vc = self.get_vc()
         vc_b = np.asarray([vc * np.cos(beta - psi), vc * np.sin(beta - psi), 0])
+        return vc_b
+
+
+class ConstentCurrent(object):
+    def __init__(self, delta_t, velocity, beta):
+        self.delta_t = delta_t
+        self.velocity = velocity
+        # beta is the current angle in radians
+        self.beta = beta
+        self.integral = 0.1
+
+    def get_current_vector(self, beta, psi):
+        vc = self.velocity
+        vc_b = np.asarray([vc * np.cos(self.beta - psi), vc * np.sin(self.beta - psi), 0])
         return vc_b
 
 
@@ -72,37 +86,39 @@ class ROVHorizontalModel(object):
 
 
 class ROVModelCurrent(object):
-    def __init__(self, delta_t):
+    def __init__(self, delta_t, current_model):
         self.delta_t = delta_t
-        self.current = Current(delta_t)
+        self.current = current_model
 
         self.beta = 0
         self.psi = 0
         self.m = 10
         self.Iz = 2
+        # self.rg = np.asarray([-0.001, 0.01]).T
         self.rg = np.asarray([-0.001, 0.01]).T
         self.HydroP = np.asarray([-7.2, -7.7, -3, -2.9, -3, -0.33]).T
         self.T_Config = np.asarray([0.145, 0.1, -np.pi / 4, np.pi / 4, 3 * np.pi / 4, -3 * np.pi / 4]).T
-        self.Thrust = 0.25 * np.asarray([50, 50, -40, -40]).T
+        # self.Thrust = 0.25 * np.asarray([50, 50, -40, -40]).T
+        self.Thrust = 0.25 * np.asarray([50, 50, 0, 0]).T
         # self.Thrust = np.zeros(4).T
         self.v0_b = np.zeros(3).T
 
         self.eta_i = np.zeros(3).T
-        self.vc = self.current.get_vc()
         self.vc_b = self.current.get_current_vector(self.beta, self.psi)
         # self.vc = np.zeros(3).T
         self.vr_b = self.v0_b - self.vc_b
+        # print(self.v0_b, self.vc_b)
 
     def rollout(self):
         # vc_b = np.zeros(3).T
         deta_i, dvr_b = ROVHorizontalModel.rov_hm(self.m, self.Iz, self.rg, self.HydroP, self.T_Config,
                                                   self.Thrust, self.vc_b, self.eta_i, self.vr_b)
+        # print(deta_i)
         self.vr_b += self.delta_t * dvr_b
         self.eta_i += self.delta_t * deta_i
         # self.psi = np.rad2deg(self.eta_i[-1])
         # self.psi = self.eta_i[-1]
         self.psi = self.eta_i[-1] * 57.3
-        self.vc = self.current.get_vc()
         self.vc_b = self.current.get_current_vector(self.beta, self.psi)
 
     def set_thrust_force(self, thrust_force):
@@ -111,7 +127,9 @@ class ROVModelCurrent(object):
 
 
 if __name__ == "__main__":
-    rov_model = ROVModelCurrent(0.1)
+    gaussian_current = GaussianCurrent(0.1)
+    constant_current = ConstentCurrent(0.1, 0, 0)
+    rov_model = ROVModelCurrent(0.1, constant_current)
     x = []
     y = []
     psi = []
@@ -129,6 +147,7 @@ if __name__ == "__main__":
     plt.scatter(x, y)
     for i in range(len(x)):
         plt.arrow(x[i], y[i], dx[i], dy[i])
+    print(psi)
     # plt.legend()
     plt.show()
     # plt.plot(sig)
