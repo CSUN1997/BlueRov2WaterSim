@@ -2,6 +2,7 @@ from WaterSim3D import Water
 import airsim
 import numpy as np
 from pyquaternion import Quaternion
+import matplotlib.pyplot as plt
 
 
 class WaterSim_Airsim:
@@ -50,3 +51,5 @@ if __name__ == "__main__":
         watersim.update(thrust_force)
     traject = np.asarray(env.traject)
     print(traject)
+    plt.scatter(traject[:, 0], traject[:, 1])
+    plt.show()

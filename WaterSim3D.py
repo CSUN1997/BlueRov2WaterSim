@@ -21,7 +21,7 @@ class Water:
         self.N_r_dot = -0.12
         self.V_min = 0
         self.V_max = 0.1
-        self.delta_t = 0.1
+        self.delta_t = 2
         self.m = 11.5
         self.W = 112.8
         self.B = 114.8
